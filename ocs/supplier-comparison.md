@@ -1,94 +1,31 @@
+# ARVO – Supplier Comparison (working evidence)
 
-# Athleticwear – Supplier Comparison
+**Updated:** 2026-11-10. Snapshot, not a live quote. Check latest original correspondence before any financial decision. See [project status](../ARVO-STATUS.md).
 
-## Projektziel
-Entwicklung eines hochwertigen Performance-Shirts für Gym und Running.
+| Manufacturer | Known information | Status | To verify |
+|---|---|---|---|
+| Sportswear of Tomorrow (Kevin) | TORINO: 100% recycled polyester, 140 GSM, sample €57 excl. VAT. FEZ: 83% recycled microfiber polyester, 6% recycled polyester, 11% elastane, 110 GSM, sample €60 excl. VAT. Custom development package €400 excl. VAT. Cut reference TSF-111R. | Reference package sent, response pending. | Cut/fabric suitability, sample vs package, MOQ model/color/size, printing, ship, lead time, rights. |
+| MakeaLabel (Ramzi) | MOQ 100 pcs; €19.99 **net/unit** at 100 pcs; sample €199 net; quoted shipping €29.99 (confirm scope and VAT). | Reference package incl. real UNIQLO photos sent, response pending. | Fit feasibility, included costs, revisions, shipping, lead time, factory/QC, pattern rights. |
+| LEMUTA (Artur) | On 10 Nov discussed 50/50 cotton/polyester at 150 GSM; swatches promised. No comparable verified price here. | Waiting for swatches. | Fabric hand feel/opacity, potential showroom, MOQ, pricing, fit, grading, lead time, labels and rights. |
+| T.O.P Studios (Stephan) | First sample approximately €150–200 **net including pattern development**, exact quote after requirements. Regular series MOQ 50 pcs/model. Labels and finishing possible. | Reference package sent, response pending. | Factory/production, fabrics, unit price, sample loops, grading, quality, terms, rights. |
+| 52GER / DOWE / HighKraft EU | Inquiries made; no current verified quote in repository. | Inbox check required. | Check correspondence before another follow-up. |
 
-Budget für die erste Entwicklungsphase: maximal 2.000 €.
+## Source and preserved earlier information
 
-## 1. Sportswear of Tomorrow – Rumänien
+Integrated 2026-11-11 from the user-supplied ZIP, snapshot 2026-11-10; no original correspondence checked. Newer package claims are reported evidence, not independently verified quotes.
 
-### Bekannte Angebote
-- TSF-111R: 135 gsm, 100 % recyceltes Polyester, lockerer Fit
-- Musterpreis: 57 € zzgl. MwSt.
-- FEZ: 110 gsm, engerer Fit
-- Musterpreis: 60 €
-- Versand: 12 €
-- Individuelle Entwicklung: 400 €
-- Zusätzlich erhaltene Stoffangabe: 88 % Polyester / 12 % Elastan, 110 gsm
+Earlier repository notes recorded Sportswear of Tomorrow in Romania, TSF-111R at 135 GSM / 100% recycled polyester (loose fit), FEZ at 110 GSM (closer fit), another blend at 88% polyester / 12% elastane, and €12 shipping. The package instead describes TORINO at 140 GSM and FEZ at 83/6/11; the relation to TSF-111R and the conflicting blend/GSM remain UNVERIFIED pending original supplier evidence. Do not silently combine these specifications. Earlier FEZ VAT status was open; the package calls it net, still to verify. MakeaLabel shipping was previously per carton, so confirm carton count and tax treatment. Reference photos were previously requested; the newer package reports them sent.
 
-### Offene Fragen
-- Welcher Stoff gehört zu welchem Modell?
-- MOQ je Modell, Farbe und Größe?
-- Wie viele Musteränderungen sind möglich?
-- Produktionszeit und Lieferzeit?
-- Branding und Etiketten?
-- Eigentum an Schnittmustern und Tech-Packs?
+The undated LEMUTA scheduling note (“next week”, Giuliano around 18:30 except Wednesday; Robin unavailable Wednesday) is historical, not current availability. The package reports a completed call on 2026-11-10; do not schedule that call again without new evidence. Reply coordination remains between Robin and Giuliano.
 
-## 2. MakeaLabel
+## Checklist for every supplier
+- MOQ per **model / color / size**, scale pricing, net/gross and delivered total including transport and possible customs.
+- Fiber mix, GSM, stretch/recovery, breathability, wash-shrinkage and colorfastness; sample swatches and decoration options.
+- Pattern, grading, fit revisions, tolerance, ownership/transfer of technical data.
+- Production in owned factory or subcontracted; quality controls, lead times, rejects/returns.
+- Print/embroidery setup, labels, care requirements, approvals and payment terms.
 
-### Bekannte Angebote
-- MOQ: 100 Stück bei bestehendem Schnitt
-- Stückpreis: 19,99 €
-- Muster: 199 €
-- Versand: 29,99 € je Karton
-- Referenzfotos von Vorderseite, Rückseite und Pflegeetikett angefragt
-
-### Offene Fragen
-- Sind Branding und Etiketten enthalten?
-- Wie werden Größen und Farben aufgeteilt?
-- Sind Musteränderungen möglich?
-- Wo wird produziert?
-- Wie lange dauert die Produktion?
-- Welche Qualitätsprüfungen werden durchgeführt?
-
-## 3. LEMUTA
-
-### Bekannter Stand
-- Ansprechpartner: Artur
-- Telefonat wurde vorgeschlagen.
-- Giuliano kann nächste Woche gegen 18:30 Uhr, außer Mittwoch.
-- Robin ist mittwochs verhindert.
-- Rückmeldung an Artur nach Abstimmung mit Robin.
-
-### Offene Fragen
-- MOQ?
-- Muster- und Entwicklungskosten?
-- Stoffzusammensetzung und GSM?
-- Branding und Etiketten?
-- Produktionsstandort?
-- Lieferzeit?
-- Eigentum an Schnittmustern und Tech-Packs?
-
-## Bewertungskriterien
-
-Jeder Hersteller wird anhand folgender Kriterien bewertet:
-
-1. Produktqualität
-2. Stoff und Funktion
-3. Passform
-4. Mindestbestellmenge
-5. Musterkosten
-6. Stückpreis
-7. Entwicklungskosten
-8. Branding
-9. Produktionsstandort
-10. Lieferzeit
-11. Qualitätskontrolle
-12. Gesamtrisiko
-
-Unbekannte Informationen werden ausdrücklich als offen markiert.
-
-## Entscheidungsregel
-
-Keine Bestellung, bevor Muster, Qualität, Gesamtkosten und Produktionsbedingungen geprüft wurden.
-
-Jede externe Zusage benötigt die Freigabe von Robin und Giuliano.
-
-## Aufgaben
-
-- [ ] Referenzshirt-Fotos an MakeaLabel senden
-- [ ] Termin mit Artur / LEMUTA abstimmen
-- [ ] Stoffzuordnung bei Sportswear of Tomorrow klären
-- [ ] Vergleichbare Angebote einholen
-- [ ] Muster physisch prüfen
+## Already done / decision gate
+- Sending full references to the four responding manufacturers is **DONE**, not an open task.
+- No manufacturer chosen; figures remain subject to written verification, physical testing and Robin + Giuliano approval.
+- Physical UNIQLO reference label: **53% cotton / 47% polyester** including 30 percentage points recycled polyester; **GSM unknown**. Do not substitute earlier, conflicting blend descriptions.

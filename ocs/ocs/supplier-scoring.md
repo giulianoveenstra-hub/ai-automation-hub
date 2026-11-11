@@ -1,4 +1,6 @@
-# Supplier Scoring – Athleticwear
+# ARVO – Supplier Scoring
+
+Integration: 2026-11-11. Kriterien und bisherige Rechenbeispiele bleiben erhalten. Aktuelle Lieferantenangaben und Widersprüche: [Vergleich](../supplier-comparison.md); Aufgabenstatus: [ARVO-STATUS.md](../../ARVO-STATUS.md). Preisbeispiele sind historische, nicht erneut bestätigte Angaben. Der Paketstand vom 2026-11-10 ersetzt keine Originalangebote.
 
 ## 1. Ziel
 
@@ -37,7 +39,7 @@ Maximal erreichbar: 10 Punkte.
 - Zusätzlich zum Score wird die Datenvollständigkeit in Prozent ausgewiesen.
 - Ein Hersteller darf nicht allein aufgrund eines vorläufigen Scores empfohlen werden.
 
-## 4. Vorläufiger Kostenvergleich
+## 4. Historische Kostenbeispiele (vor Paketstand 2026-11-10)
 
 ### Sportswear of Tomorrow
 
@@ -104,7 +106,7 @@ Ein Hersteller wird erst dann als Favorit eingestuft, wenn:
 6. Lieferzeit und Qualitätskontrolle geklärt sind.
 7. Robin und Giuliano zugestimmt haben.
 
-## 7. Aktueller Status
+## 7. Historischer Datenstand (vor Paketstand 2026-11-10)
 
 | Hersteller | Bewertung |
 |---|---|
@@ -114,7 +116,9 @@ Ein Hersteller wird erst dann als Favorit eingestuft, wenn:
 
 Noch keine endgültige Rangfolge erstellen.
 
-## 8. Nächste Schritte
+## 8. Prüfschritte bei neuen Belegen
+
+Aktuelle DONE/WAITING/OPEN-Zuordnung ausschließlich im verlinkten Projektstatus prüfen; diese Liste ist keine erneute Aufgabenvergabe.
 
 - [ ] Offene Herstellerfragen beantworten lassen
 - [ ] Vergleichbare Angebote einholen
