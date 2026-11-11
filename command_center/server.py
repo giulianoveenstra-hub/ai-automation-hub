@@ -4,8 +4,9 @@ import json
 import secrets
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, parse_qs
 from .model import METHODS, validate
+from .technical import definitions
 from .storage import Store, Conflict
 
 ROOT = Path(__file__).parent
@@ -46,14 +47,25 @@ def make_server(database, port=8765):
                 return self.reply(403, {'error':'Nur localhost erlaubt'})
             path = urlsplit(self.path).path
             if path == '/api/workspace':
-                return self.reply(200, dict(**store.read(), csrf=token, methods=METHODS))
+                return self.reply(200, dict(**store.read(), csrf=token, methods=METHODS, catalog={p:definitions(p) for p in ('cutoff','regular')}))
             if path == '/api/export.json':
                 return self.reply(200, store.read(), attachment='arvo-workspace.json')
+            if path == '/api/drawing':
+                from .drawings import svg
+                query = parse_qs(urlsplit(self.path).query)
+                product = query.get('product',['cutoff'])[0]
+                view = query.get('view',['front'])[0]
+                if product not in ('cutoff','regular') or view not in ('front','back','side'):
+                    return self.reply(400, {'error':'Unbekannte Zeichnung'})
+                return self.reply(200, svg(product,view), 'image/svg+xml; charset=utf-8')
             if path == '/api/techpack.pdf':
                 try:
                     from .pdf_export import export_pdf
                     saved = store.read()
-                    pdf = export_pdf(saved['data'], saved['revision'])
+                    product=parse_qs(urlsplit(self.path).query).get('product',[saved['data'].get('activeProduct','cutoff')])[0]
+                    if product not in ('cutoff','regular'):
+                        return self.reply(400, {'error':'Unbekannte Produktvariante'})
+                    pdf = export_pdf(saved['data'], saved['revision'], product)
                     return self.reply(200, pdf, 'application/pdf', 'ARVO-Tech-Pack-Entwurf.pdf')
                 except ImportError:
                     return self.reply(503, {'error':'PDF-Abhängigkeit fehlt: pip install -r command_center/requirements.txt'})
@@ -79,8 +91,8 @@ def make_server(database, port=8765):
                     raise ValueError('Ungültige Nutzlastgröße')
                 payload = json.loads(self.rfile.read(length))
                 if self.path == '/api/validate':
-                    validate(payload)
-                    return self.reply(200, {'valid':True})
+                    converted=validate(payload)
+                    return self.reply(200, {'valid':True,'data':converted})
                 if not isinstance(payload,dict) or set(payload) != {'revision','data'} or type(payload['revision']) is not int:
                     raise ValueError('Revision und Daten erforderlich')
                 result = store.save(payload['revision'], payload['data'])

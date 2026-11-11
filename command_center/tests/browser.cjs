@@ -1,56 +1,99 @@
-// Optional browser check: npm install --no-save --prefix /tmp/arvo-browser playwright
-// NODE_PATH=/tmp/arvo-browser/node_modules node command_center/tests/browser.cjs
-// Start a disposable server first; never use your real workspace for this test.
+// Run only against a fresh disposable server (ARVO_TEST_URL), never real workspace data.
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 (async()=>{
   const browser=await chromium.launch({headless:true});
-  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
-  const page=await context.newPage();const errors=[];
+  const context=await browser.newContext({viewport:{width:1440,height:1080},acceptDownloads:true});
+  const page=await context.newPage(),errors=[];
+  context.on('page',p=>p.on('pageerror',e=>errors.push(e.message)));
   page.on('pageerror',e=>errors.push(e.message));
-  const url=process.env.ARVO_TEST_URL||'http://127.0.0.1:8765';
-  await page.goto(url);await page.getByText('Gespeichert · Revision',{exact:false}).waitFor();
-  const stale=await context.newPage();await stale.goto(url);await stale.getByText('Gespeichert · Revision',{exact:false}).waitFor();
-  assert.equal(await page.locator('#measurements tbody tr').count(),19);
+  const url=process.env.ARVO_TEST_URL||'http://127.0.0.1:8771';
+  const ready=async p=>{await p.getByText('Gespeichert · Revision',{exact:false}).waitFor();await p.locator('.drawing-card').nth(2).waitFor();};
+  await page.goto(url);await ready(page);
+  const initial=await page.evaluate(()=>fetch('/api/workspace').then(r=>r.json()));
+  assert.equal(initial.revision,0,'Use a fresh test directory');
+  const stale=await context.newPage();await stale.goto(url);await ready(stale);
+  assert.equal(await page.locator('#measurements tbody tr').count(),43);
+  for(const view of ['front','back','side'])assert.equal(await page.locator(`[data-view="${view}"] svg`).count(),1);
+  const hps=page.locator('[data-view="front"] svg>circle').first();
+  assert.equal(await hps.getAttribute('cx'),'154');assert.equal(await hps.getAttribute('cy'),'100');
+  for(const view of ['front','back'])for(let i=10;i<=16;i++)assert.ok(await page.locator(`[data-view="${view}"] [data-point-id="AT${i}"]`).count());
+  for(let i=40;i<=43;i++)assert.ok(await page.locator(`[data-view="side"] [data-point-id="AT${i}"]`).count());
+  // Table -> SVG and SVG -> table, with a shared garment-width ID in both views.
+  await page.getByRole('button',{name:'AT10 auswählen',exact:true}).click();
+  assert.equal(await page.locator('#drawing-grid [data-point-id="AT10"].selected').count(),2);
+  await page.locator('[data-view="back"] [data-point-id="AT16"] text').click();
+  await page.locator('#row-AT16.selected').waitFor();
+  await page.locator('[data-view="side"] [data-point-id="AT40"]').focus();
+  await page.locator('[data-view="side"] [data-point-id="AT40"]').press('Enter');
+  await page.locator('#row-AT40.selected').waitFor();
+  await page.getByRole('button',{name:'AT16 auswählen',exact:true}).click();
+  for(const filter of ['horizontal','vertical','neck','chest','waist','hem','selected','all']){
+    await page.locator('#drawing-filter').selectOption(filter);
+    const visible=await page.locator('#drawing-grid .measurement-line:not(.filtered-out)').evaluateAll(nodes=>nodes.map(n=>({axis:n.dataset.axis,region:n.dataset.region,id:n.dataset.pointId})));
+    assert.ok(visible.length,filter);
+    if(['horizontal','vertical'].includes(filter))assert.ok(visible.every(n=>n.axis===filter));
+    if(['neck','chest','waist','hem'].includes(filter))assert.ok(visible.every(n=>n.region===filter));
+    if(filter==='selected')assert.ok(visible.every(n=>n.id==='AT16'));
+  }
+  await page.getByRole('button',{name:'A auswählen',exact:true}).click();
+  assert.match(await page.locator('#point-info').innerText(),/Keine belegte Zuordnung/);
   assert.equal(await page.getByLabel('A S',{exact:true}).inputValue(),'');
-  await page.getByLabel('A Messpunkt-Vorschlag',{exact:true}).selectOption({label:'Brustweite (1/2)'});
-  assert.equal(await page.getByLabel('A Definition',{exact:true}).inputValue(),'Brustweite (1/2)');
-  await page.getByLabel('A S',{exact:true}).fill('48.25');
-  await page.getByLabel('A minus',{exact:true}).fill('0');
-  await page.getByLabel('A Quelle / Zustand',{exact:true}).fill('TESTDATEN / kein reales ARVO-Maß');
-  await page.getByRole('button',{name:'Änderungen speichern'}).click();await page.getByText('Änderungen gespeichert.',{exact:true}).waitFor();
-  await stale.getByLabel('A S',{exact:true}).fill('99');
+  await page.getByLabel('AT02 S',{exact:true}).fill('6.75');
+  await page.getByLabel('AT03 S',{exact:true}).fill('2.5');
+  await page.getByLabel('AT40 S',{exact:true}).fill('7.25');
+  await page.getByLabel('AT41 S',{exact:true}).fill('8.5');
+  assert.equal(await page.getByLabel('AT42 S',{exact:true}).inputValue(),'','No automatic sum');
+  await page.getByLabel('AT02 minus',{exact:true}).fill('0');
+  await page.getByLabel('AT02 Quelle / Zustand',{exact:true}).fill('TEST ONLY / kein Produktionsmaß');
+  await page.getByLabel('Care Label / Materialzusammensetzung',{exact:true}).fill('TEST ONLY / keine Produktionsmischung');
+  assert.match(await page.locator('#preview-care').innerText(),/TEST ONLY/);
+  await page.locator('#product-select').selectOption('regular');await page.locator('[data-view="side"]').waitFor();
+  assert.equal(await page.locator('#measurements tbody tr').count(),26);
+  assert.equal(await page.getByLabel('RF02 S',{exact:true}).inputValue(),'');
+  assert.ok(await page.locator('[data-point-id="RF50"]').count());
+  await page.getByLabel('RF02 S',{exact:true}).fill('4.25');
+  await page.locator('#product-select').selectOption('cutoff');await page.locator('[data-view="side"]').waitFor();
+  assert.equal(await page.getByLabel('AT02 S',{exact:true}).inputValue(),'6.75');
+  const save=async()=>{await page.getByRole('button',{name:'Änderungen speichern'}).click();await page.getByText('Änderungen gespeichert.',{exact:true}).waitFor();};
+  await save();await page.reload();await ready(page);
+  assert.equal(await page.getByLabel('AT03 S',{exact:true}).inputValue(),'2.5');
+  await stale.getByLabel('A S',{exact:true}).fill('999');
   await stale.getByRole('button',{name:'Änderungen speichern'}).click();await stale.getByText('Zwischenzeitlich geändert.',{exact:false}).waitFor();
-  assert.equal(await stale.getByLabel('A S',{exact:true}).inputValue(),'99');
-  // Backups keep unsaved edits even when saving conflicts.
-  const downloadPromise=stale.waitForEvent('download');await stale.getByRole('button',{name:'JSON-Sicherung',exact:true}).click();
-  const download=await downloadPromise;const raw=fs.readFileSync(await download.path(),'utf8');assert.equal(JSON.parse(raw).data.techpack.measurements[0].S,99);
-  await page.reload();await page.getByText('Gespeichert · Revision',{exact:false}).waitFor();
-  assert.equal(await page.getByLabel('A S',{exact:true}).inputValue(),'48.25');
-  await page.getByRole('button',{name:'02 / Aufgaben'}).click();
-  await page.locator('#owner-filter').selectOption('Robin');assert.equal(await page.locator('#task-list .card').count(),1);
+  assert.equal(await stale.getByLabel('A S',{exact:true}).inputValue(),'999');
+  const backupPromise=page.waitForEvent('download');await page.getByRole('button',{name:'JSON-Sicherung',exact:true}).click();
+  const backup=await backupPromise,backupPath=await backup.path();
+  const backupRaw=fs.readFileSync(backupPath);assert.equal(JSON.parse(backupRaw).data.schemaVersion,2);
+  page.once('dialog',d=>d.accept());await page.locator('#import').setInputFiles({name:'backup.json',mimeType:'application/json',buffer:backupRaw});
+  await page.getByText('JSON im Editor geladen; noch nicht gespeichert.',{exact:true}).waitFor();await save();
+  page.once('dialog',d=>d.accept());await page.locator('#import').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"data":{"schemaVersion":2}}')});
+  await page.getByText('Import fehlgeschlagen:',{exact:false}).waitFor();assert.equal(await page.getByLabel('AT02 S',{exact:true}).inputValue(),'6.75');
+  for(const product of ['cutoff','regular']){
+    await page.locator('#product-select').selectOption(product);await page.locator('[data-view="side"]').waitFor();await save();
+    const download=page.waitForEvent('download');await page.getByRole('button',{name:'PDF exportieren',exact:true}).click();
+    const pdf=await download;assert.ok(fs.readFileSync(await pdf.path()).subarray(0,5).equals(Buffer.from('%PDF-')));
+  }
+  await page.reload();await ready(page);assert.equal(await page.locator('#product-select').inputValue(),'regular');
+  assert.equal(await page.getByLabel('RF02 S',{exact:true}).inputValue(),'4.25');
+  // The business panels remain operational and their initial records are intact.
+  await page.getByRole('button',{name:'02 / Aufgaben'}).click();await page.locator('#owner-filter').selectOption('Robin');assert.equal(await page.locator('#task-list .card').count(),1);
   await page.locator('#owner-filter').selectOption('');await page.locator('#status-filter').selectOption('DONE');assert.equal(await page.locator('#task-list .card').count(),2);
-  await page.getByRole('button',{name:'03 / Hersteller & Muster'}).click();
-  await page.getByRole('button',{name:'+ Muster',exact:true}).click();
-  await page.locator('#sample-list').getByLabel('Muster / Swatch',{exact:true}).last().fill('TEST / Fit-Muster');
-  await page.getByRole('button',{name:'Änderungen speichern'}).click();await page.getByText('Änderungen gespeichert.',{exact:true}).waitFor();
-  await page.getByRole('button',{name:'01 / Tech Pack'}).click();
-  const pdfPromise=page.waitForEvent('download');await page.getByRole('button',{name:'PDF exportieren',exact:true}).click();
-  const pdf=await pdfPromise;assert.ok(fs.readFileSync(await pdf.path()).subarray(0,5).equals(Buffer.from('%PDF-')));
-  // Invalid import must leave current state intact.
-  page.once('dialog',dialog=>dialog.accept());
-  // Confirm is synchronous with the upload handler, so use handler before a second upload.
-  await page.locator('#import').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"data":{"schemaVersion":1}}')});
-  await page.getByText('Import fehlgeschlagen:',{exact:false}).waitFor();
-  assert.equal(await page.getByLabel('A S',{exact:true}).inputValue(),'48.25');
-  await page.getByRole('button',{name:'Gespeicherten Stand neu laden',exact:true}).click();
-  await page.getByText('Gespeichert · Revision',{exact:false}).waitFor();
-  fs.mkdirSync('command_center/test-output',{recursive:true});
-  await page.evaluate(()=>window.scrollTo(0,0));
-  await page.screenshot({path:'command_center/test-output/desktop.png',fullPage:false});
-  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'command_center/test-output/mobile.png',fullPage:false});
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
-  assert.deepEqual(errors,[]);console.log('Browser: measurements, persistence, conflict, backup, task filters, sample edit, PDF download, invalid import, mobile layout OK');
+  await page.getByRole('button',{name:'03 / Hersteller & Muster'}).click();assert.equal(await page.locator('#supplier-list>.card').count(),7);assert.equal(await page.locator('#sample-list>.card').count(),1);
+  const saved=await page.evaluate(()=>fetch('/api/workspace').then(r=>r.json()));
+  for(const key of ['tasks','suppliers','samples'])assert.deepEqual(saved.data[key],initial.data[key]);
+  await page.getByRole('button',{name:'01 / Tech Pack'}).click();await page.locator('#product-select').selectOption('cutoff');await page.locator('[data-view="side"]').waitFor();
+  await page.locator('#point-select').selectOption('AT02');
+  fs.mkdirSync('command_center/test-output/v21',{recursive:true});
+  await page.locator('#drawing-grid').screenshot({path:'command_center/test-output/v21/drawings-desktop.png'});
+  await page.locator('#product-select').selectOption('regular');await page.locator('[data-view="side"]').waitFor();
+  await page.locator('#drawing-grid').screenshot({path:'command_center/test-output/v21/regular-desktop.png'});
+  await page.locator('#product-select').selectOption('cutoff');await page.locator('[data-view="side"]').waitFor();
+  await page.locator('#labels-grid').screenshot({path:'command_center/test-output/v21/labels-desktop.png'});
+  await page.setViewportSize({width:390,height:844});await page.locator('#drawing-grid').screenshot({path:'command_center/test-output/v21/drawings-mobile.png'});
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  const layout=await page.locator('.drawing-card').evaluateAll(n=>n.map(e=>({width:e.getBoundingClientRect().width,x:e.getBoundingClientRect().x})));
+  assert.ok(layout.every(n=>n.width<=390&&n.x>=0));assert.deepEqual(errors,[]);
+  console.log('V2.1 browser OK: six variant views, HPS, neck/width/hem/armhole IDs, filters, bidirectional selection, independent values, variants, persistence, conflicts, JSON, labels, both PDFs, unchanged business records, desktop/mobile.');
   await browser.close();
 })().catch(e=>{console.error(e);process.exit(1);});

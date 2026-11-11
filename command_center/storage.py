@@ -1,7 +1,7 @@
 """Single authoritative local database with transactional optimistic locking."""
 import json
 import sqlite3
-from .model import seed, validate
+from .model import seed, validate, migrate
 
 class Conflict(Exception):
     pass
@@ -12,6 +12,17 @@ class Store:
         with self.connect() as db:
             db.execute('CREATE TABLE IF NOT EXISTS workspace (id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL, data TEXT NOT NULL)')
             db.execute('INSERT OR IGNORE INTO workspace VALUES (1,0,?)', (json.dumps(seed()),))
+            # Migration and its exact original snapshot commit together. An older
+            # browser keeps its old revision and cannot overwrite the new schema.
+            if not db.in_transaction:
+                db.execute('BEGIN IMMEDIATE')
+            revision, raw = db.execute('SELECT revision,data FROM workspace WHERE id=1').fetchone()
+            converted = migrate(json.loads(raw))
+            if converted != json.loads(raw):
+                validate(converted)
+                db.execute('CREATE TABLE IF NOT EXISTS migration_backup (revision INTEGER PRIMARY KEY, data TEXT NOT NULL)')
+                db.execute('INSERT OR IGNORE INTO migration_backup VALUES (?,?)', (revision, raw))
+                db.execute('UPDATE workspace SET revision=revision+1,data=? WHERE id=1', (json.dumps(converted,ensure_ascii=False),))
 
     def connect(self):
         return sqlite3.connect(self.path, timeout=10)

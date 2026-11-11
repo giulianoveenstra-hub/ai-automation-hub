@@ -17,7 +17,7 @@ METHODS = {
     'Armausschnitttiefe': 'Senkrecht vom höchsten Schulterpunkt bis zur waagerechten Linie durch den unteren Armausschnitt messen.',
 }
 
-def seed():
+def legacy_seed():
     tasks = [
         ('measure-reference', 'UNIQLO-Referenzen messen: verfügbare S/M/L, Methode und Fotos festhalten', 'Robin', 'OPEN'),
         ('agree-design', 'Frontlogo, Rückenprint, Silhouette, Grading und Toleranzen abstimmen', 'Gemeinsam', 'OPEN'),
@@ -51,8 +51,41 @@ def seed():
                       requested='', received='', review='', source=SOURCE)],
     )
 
+def migrate(data):
+    """Additive v1->v2 conversion; legacy A-S and all business records stay intact."""
+    from .technical import extend_techpack
+    data = copy.deepcopy(data)
+    if not isinstance(data, dict):
+        raise ValueError('Workspace muss ein Objekt sein')
+    if data.get('schemaVersion') == 1:
+        # Validate original shape before indexing; malformed imports must not become valid.
+        if set(data) != set(legacy_seed()) or not isinstance(data.get('techpack'),dict):
+            raise ValueError('Ungültiges altes Backup')
+        original = data['techpack']
+        if set(original) != set(legacy_seed()['techpack']) or not isinstance(original.get('measurements'),list):
+            raise ValueError('Ungültiges altes Tech Pack')
+        if [p.get('code') for p in original['measurements'] if isinstance(p,dict)] != list(string.ascii_uppercase[:19]):
+            raise ValueError('Altes Backup muss A-S vollständig enthalten')
+        data['schemaVersion'] = 2
+        data['activeProduct'] = 'cutoff'
+        data['techpack'] = extend_techpack(original, 'cutoff')
+        regular = copy.deepcopy(legacy_seed()['techpack'])
+        regular.update(title='ARVO REGULAR FIT T-SHIRT', version='V2.1 · Entwurf',
+                       context='Klassisches T-Shirt mit kurzen Ärmeln. Eigenständiges Maßsystem; keine Übernahme von Cutoff-Maßen.',reference='',measurements=[])
+        data['regularTechpack'] = extend_techpack(regular, 'regular')
+    return data
+
+
+def seed():
+    return migrate(legacy_seed())
+
+
+def techpack(data, product=None):
+    return data['regularTechpack'] if (product or data.get('activeProduct')) == 'regular' else data['techpack']
+
 def validate(data):
     """Strict shape, finite numbers, stable IDs, bounded payloads; draft blanks allowed."""
+    data = migrate(data)
     template = seed()
     def walk(value, spec, path):
         if isinstance(spec, dict):
@@ -74,11 +107,22 @@ def validate(data):
         elif not isinstance(value, str) or len(value) > 4000 or any(ord(c) < 32 and c not in '\n\r\t' for c in value):
             raise ValueError(path + ': ungültiger Text')
     walk(data, template, 'workspace')
-    if data['techpack']['unit'] != 'cm':
-        raise ValueError('Maßeinheit muss cm bleiben')
-    points = data['techpack']['measurements']
-    if [p['code'] for p in points] != list(string.ascii_uppercase[:19]):
-        raise ValueError('A–S müssen in ursprünglicher Reihenfolge erhalten bleiben')
+    from .technical import definitions, PRODUCTS
+    if data['activeProduct'] not in ('cutoff','regular'):
+        raise ValueError('Unbekannte Produktvariante')
+    for product, t in (('cutoff',data['techpack']),('regular',data['regularTechpack'])):
+        if t['variant'] != PRODUCTS[product] or t['specVersion'] != '2.1':
+            raise ValueError('Variante und Zeichnungsstruktur müssen zum Maßsystem passen')
+        if t['unit'] != 'cm':
+            raise ValueError('Maßeinheit muss cm bleiben')
+        expected = ([*string.ascii_uppercase[:19]] if product == 'cutoff' else []) + [d['code'] for d in definitions(product)]
+        if [p['code'] for p in t['measurements']] != expected:
+            raise ValueError('Maßpunkt-IDs und Reihenfolge müssen erhalten bleiben')
+        by_code = {p['code']:p for p in t['measurements']}
+        for d in definitions(product):
+            for key in ('name','method'):
+                if by_code[d['code']][key] != d[key]:
+                    raise ValueError('Zeichnungsdefinition '+d['code']+' darf nicht still neu zugeordnet werden; Belege/Notizen separat pflegen')
     for group in ('tasks', 'suppliers', 'samples'):
         ids = [r['id'] for r in data[group]]
         if any(not i for i in ids) or len(set(ids)) != len(ids):
@@ -101,8 +145,8 @@ def validate(data):
         raise ValueError('Muster muss einem vorhandenen Hersteller zugeordnet sein')
     return copy.deepcopy(data)
 
-def missing(data):
-    t = data['techpack']
+def missing(data, product=None):
+    t = techpack(data, product)
     issues = []
     for p in t['measurements']:
         fields = [k for k in ('name','method','source') if not p[k].strip()]

@@ -7,7 +7,7 @@ import unittest
 from io import BytesIO
 from pathlib import Path
 from pypdf import PdfReader
-from command_center.model import seed, validate, missing
+from command_center.model import seed, legacy_seed, validate, missing, migrate
 from command_center.storage import Store, Conflict
 from command_center.server import make_server
 from command_center.pdf_export import export_pdf
@@ -16,8 +16,8 @@ from command_center.pdf_export import export_pdf
 class ModelTests(unittest.TestCase):
     def test_unknowns_and_draft_context(self):
         data=seed()
-        self.assertEqual(len(data['techpack']['measurements']),19)
-        self.assertTrue(all(p['S'] is None and p['name']=='' for p in data['techpack']['measurements']))
+        self.assertEqual(len(data['techpack']['measurements']),43)
+        self.assertTrue(all(p['S'] is None and p['name']=='' for p in data['techpack']['measurements'][:19]))
         self.assertIsNone(data['techpack']['fabric']['gsm'])
         self.assertEqual(data['samples'][0]['status'],'WAITING')
         self.assertTrue(missing(data))
@@ -66,6 +66,67 @@ class ModelTests(unittest.TestCase):
         self.assertTrue(export_pdf(data,0).startswith(b'%PDF'))
 
 
+    def test_lossless_version_one_migration(self):
+        old=legacy_seed()
+        old['techpack']['measurements'][5].update(name='F aus Originalbeleg',method='Nicht automatisch umdeuten',S=51.2,source='Privater Beleg')
+        old['tasks'][0]['notes']='Bestehende Aufgabe behalten'
+        old['techpack']['construction']='Bestehende Verarbeitungsnotiz'
+        with tempfile.TemporaryDirectory() as folder:
+            path=Path(folder)/'db'
+            import sqlite3
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE workspace (id INTEGER PRIMARY KEY,revision INTEGER,data TEXT)')
+                db.execute('INSERT INTO workspace VALUES (1,7,?)',(json.dumps(old),))
+            store=Store(path);new=store.read()
+            self.assertEqual(new['revision'],8)
+            self.assertEqual(new['data']['techpack']['measurements'][:19],old['techpack']['measurements'])
+            for key in ('tasks','suppliers','samples'):
+                self.assertEqual(new['data'][key],old[key])
+            self.assertEqual(new['data']['techpack']['construction'],old['techpack']['construction'])
+            self.assertTrue(all(p['S'] is None for p in new['data']['regularTechpack']['measurements']))
+            self.assertEqual(Store(path).read(),new)
+            with sqlite3.connect(path) as db:
+                self.assertEqual(json.loads(db.execute('SELECT data FROM migration_backup').fetchone()[0]),old)
+            with self.assertRaises(Conflict):store.save(7,migrate(old))
+
+    def test_geometry_ids_and_separate_measurement_systems(self):
+        from command_center.technical import definitions
+        from command_center.drawings import scene,svg
+        for product,prefix in (('cutoff','AT'),('regular','RF')):
+            data=seed();pack=data['techpack'] if product=='cutoff' else data['regularTechpack']
+            known={p['code'] for p in pack['measurements']}
+            drawn=set()
+            for view in ('front','back','side'):
+                nodes=scene(product,view)
+                ids={n['point'] for n in nodes if 'point' in n}
+                self.assertTrue(ids<=known);drawn|=ids
+                if view in ('front','back'):
+                    self.assertTrue({prefix+str(i) for i in range(10,17)}<=ids)
+                    self.assertTrue(any(n['kind']=='circle' and n['x']==154 and n['y']==100 and 'point' not in n for n in nodes))
+                xml=svg(product,view)
+                self.assertIn('tabindex="0"',xml)
+            self.assertEqual(drawn,{d['code'] for d in definitions(product)})
+            self.assertIn(prefix+'02',{n.get('point') for n in scene(product,'front')})
+            self.assertNotIn(prefix+'03',{n.get('point') for n in scene(product,'front')})
+            self.assertTrue({prefix+str(i) for i in range(40,44)}<={n.get('point') for n in scene(product,'side')})
+            d=next(d for d in definitions(product) if d['code']==prefix+'42')
+            self.assertEqual(d['kind'],'projection')
+        data=seed();data['techpack']['measurements'][19]['name']='Neu umgedeutet'
+        with self.assertRaises(ValueError):validate(data)
+
+    def test_pdf_structure_and_variant_isolation(self):
+        data=seed();data['techpack']['measurements'][19]['S']=49.125
+        data['regularTechpack']['measurements'][0]['S']=73.875
+        for product,own,other in (('cutoff','49.125','73.875'),('regular','73.875','49.125')):
+            pdf=export_pdf(data,9,product)
+            text='\n'.join(page.extract_text() for page in PdfReader(BytesIO(pdf)).pages)
+            self.assertIn(own,text);self.assertNotIn(other,text)
+            headings=['01 / Product Overview','02 / Front View','03 / Back View','04 / Side View','05 / Measurement Table','06 / Fabric & Construction','07 / Care Label','08 / Neck Label','09 / Hang Tag','10 / Offene Angaben']
+            self.assertEqual([text.index(h) for h in headings],sorted(text.index(h) for h in headings))
+            self.assertNotIn('Seitenschlitz',text)
+            self.assertIn('KEINE direkten Flachmaße',text)
+
+
 class HTTPTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -89,6 +150,8 @@ class HTTPTests(unittest.TestCase):
         self.assertEqual(self.request('/api/workspace',headers={'Host':'evil.example'})[0],403)
         self.assertEqual(self.request('/private/workspace.sqlite3')[0],404)
         self.assertEqual(self.request('/api/validate',payload['data'],headers)[0],200)
+        self.assertEqual(self.request('/api/drawing?product=regular&view=side')[0],200)
+        self.assertEqual(self.request('/api/drawing?product=bad&view=side')[0],400)
         self.assertEqual(self.request('/api/workspace',payload,headers)[0],200)
         self.assertEqual(self.request('/api/workspace',payload,headers)[0],409)
         exported=json.loads(self.request('/api/export.json')[1])
