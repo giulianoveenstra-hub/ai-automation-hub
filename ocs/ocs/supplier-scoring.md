@@ -29,6 +29,8 @@ Berechnung:
 
 Gesamtscore = Summe aus (Punkte der Kategorie × Gewicht).
 
+Die Prozentgewichte werden als Bruchteile eingesetzt (20 % = 0,20).
+
 Maximal erreichbar: 10 Punkte.
 
 ## 3. Umgang mit fehlenden Informationen
@@ -37,9 +39,12 @@ Maximal erreichbar: 10 Punkte.
 - Fehlende Informationen erhalten nicht automatisch 0 Punkte.
 - Eine Kategorie darf erst bewertet werden, wenn ausreichende Belege vorliegen.
 - Zusätzlich zum Score wird die Datenvollständigkeit in Prozent ausgewiesen.
+- Keine Rangfolge auf Basis unvollständiger Belege erstellen; Datenvollständigkeit und Score getrennt ausweisen.
 - Ein Hersteller darf nicht allein aufgrund eines vorläufigen Scores empfohlen werden.
 
 ## 4. Historische Kostenbeispiele (vor Paketstand 2026-11-10)
+
+Paketstand 2026-11-10: Die Preisangaben stehen zentral im [Lieferantenvergleich](../supplier-comparison.md), einschließlich T.O.P Studios (ca. 150–200 € netto für ein Muster inklusive Schnittentwicklung, reguläre MOQ 50 Stück/Modell, Produktionsstückpreis unbekannt). Dies sind keine direkt vergleichbaren Gesamtangebote. Der Vergleich dokumentiert auch abweichende ältere Stoff- und Steuerangaben; die folgenden historischen Rechenbeispiele bleiben erhalten.
 
 ### Sportswear of Tomorrow
 
@@ -98,13 +103,14 @@ Risiken werden als niedrig, mittel oder hoch dokumentiert.
 
 Ein Hersteller wird erst dann als Favorit eingestuft, wenn:
 
-1. Ein physisches Muster geprüft wurde.
+1. Ein physisches Muster geprüft und durch Trage- sowie Waschtests bewertet wurde.
 2. Stoff und Funktion für Gym und Running geeignet sind.
-3. Passform und Größen geprüft wurden.
-4. Gesamtkosten nachvollziehbar sind.
+3. Passform, abgestufte Größen und Toleranzen geprüft wurden.
+4. Schriftliche Gesamtkosten einschließlich Steuern, Transport und möglicher Zusatzkosten nachvollziehbar sind.
 5. MOQ und Produktionsbedingungen schriftlich vorliegen.
 6. Lieferzeit und Qualitätskontrolle geklärt sind.
-7. Robin und Giuliano zugestimmt haben.
+7. Eigentum und Übergabe von Schnittmustern und technischen Dateien geklärt sind.
+8. Robin und Giuliano ausdrücklich zugestimmt haben; dies gilt auch für Musterkäufe.
 
 ## 7. Historischer Datenstand (vor Paketstand 2026-11-10)
 
