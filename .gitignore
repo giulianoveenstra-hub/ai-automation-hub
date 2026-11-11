@@ -1,0 +1,6 @@
+# Local workspace data and environments must never enter this public repository.
+.venv/
+__pycache__/
+*.pyc
+command_center/private/
+command_center/test-output/

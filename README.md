@@ -1,6 +1,6 @@
 # AI Automation Hub
 
-Minimal, source-aware instructions and notes for AI-assisted work. **This is documentation/configuration, not an active automation service.**
+Minimal, source-aware instructions and notes for AI-assisted work. **The root files are documentation/configuration. An optional local ARVO MVP is available on this branch; no hosted automation service is activated.**
 
 ## Read only what you need
 
@@ -22,3 +22,7 @@ Minimal, source-aware instructions and notes for AI-assisted work. **This is doc
 ## Activation and limits
 
 Codex can load root `AGENTS.md` in a checkout and discover the matching skill under `.agents/skills/`; Copilot support depends on its client loading `.github/copilot-instructions.md`. These files configure guidance only. This integration does not change model selection, reasoning effort, billing, global settings or external integrations; no measured token savings are claimed. The rules become available on this branch, and on `main` only after merge.
+
+## ARVO Command Center MVP
+
+[Installation, Bedienung, Zusammenarbeit und Grenzen](command_center/README.md): bearbeitbarer Tech-Pack-Entwurf mit S/M/L, PDF-Export, gemeinsamen Aufgaben sowie Hersteller-/Mustertracking. Lokal starten; keine automatische Veröffentlichung oder Produktionsfreigabe. Bestehende Projektdateien bleiben historische Quellsnapshots.
