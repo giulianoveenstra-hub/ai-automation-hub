@@ -17,3 +17,10 @@ This repository is a **shared automation guidance and coordination repository**,
 - Do not claim that ChatGPT or Claude automatically syncs memory, chats, iCloud files, or other repositories.
 - Prefer lean, composable solutions and avoid unnecessary paid services or broad permissions.
 - Report actual changes, checks and outstanding limitations. No unverified completion claims.
+
+## Execution environment and efficient use
+- Prefer GitHub-backed Claude Code **cloud sessions** for longer-running repository tasks that must continue while the MacBook sleeps or is closed. Local sessions stop progressing when the Mac sleeps; cloud sessions do not grant access to local Finder or iCloud files.
+- Finish any Mac-local inventory/configuration locally, save only reviewed non-secret artifacts to the appropriate private repository, then run separately authorized cloud tasks from that repository.
+- Use minimal task-relevant context and targeted file reads. Default to a cost-effective model/effort for routine changes; escalate for genuinely complex design, security or architecture work. Do not switch models repeatedly in a large session.
+- Scope tools and skills per task, avoid unneeded parallel agents, summarize context between phases and use a fresh session for unrelated work. Never skip required tests or security checks just to reduce tokens.
+- Report what executed locally, what ran in cloud, what was measured, and what remains unverified.
