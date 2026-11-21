@@ -85,3 +85,17 @@ These are recommended *logical* paths, not proof that the folders exist. Check e
 - Verify the local Finder layout and iCloud sync; no direct macOS inspection was performed in this repository update.
 - Review current Claude code settings and installed plugin versions.
 - Decide whether to keep the public hub only for generic examples or eventually migrate private instructions into a separate private repository.
+
+## Cloud-first operation and context economy
+
+**Laptop lid closed:** Use a genuine GitHub-backed Claude Code cloud session (or an appropriate cloud scheduled task). It executes remotely after the Mac sleeps. A local Claude Code terminal/desktop execution cannot keep running merely by changing a prompt. Browser or Finder access through the local Mac is not available when it sleeps, even if a cloud conversation continues.
+
+**Handoff protocol:**
+1. Complete the one-time local inventory and settings review on the awake Mac, with explicit consent for local operations.
+2. Record only authorized non-secret code and execution instructions in the correct private GitHub repository; commit a self-contained migration plan if needed.
+3. Start the cloud task with that repository and scoped acceptance criteria; ask for a pull request rather than immediately deploying or merging.
+4. Inspect the PR and any tests from web/mobile; pull or teleport results to the Mac when necessary.
+
+**Cost and token discipline:** Keep global guidance short. Load only relevant task-specific skills/files and scoped MCP connections. Use appropriate model/effort instead of always highest reasoning; switch only when warranted, as model switches can re-read context. Use small branches, targeted tests, /compact or fresh sessions between distinct tasks, and avoid unnecessary agent fan-out. This is a usage-efficiency strategy, **not** a guarantee of a specific token budget or background execution.
+
+**Verification:** Explicitly distinguish a successful cloud code run from access to the owner's local Mac or files. A task must not imply a remote/cloud capability until it has been verified in that user's environment.
